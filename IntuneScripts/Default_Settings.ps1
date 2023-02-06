@@ -35,7 +35,7 @@ Else {
 }}
 
 function Rename-Drive{
-    Set-Volume -DriveLetter C -NewFileSystemLabel "Reiz Tech"
+    Set-Volume -DriveLetter C -NewFileSystemLabel "New Name"
 }
 
 Set-AutoTimeZone
