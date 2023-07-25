@@ -42,7 +42,7 @@ def ews_credentials():
             client_id=get_kv_secret("ews-client-id"),
             client_secret=get_kv_secret("ews-client-secret"),
             tenant_id=get_kv_secret("tenant-id"),
-            identity=Identity(primary_smtp_address="911@reiz.tech"),
+            identity=Identity(primary_smtp_address="<primary_smtp_address>"),
         )
         config = Configuration(
             service_endpoint="https://outlook.office365.com/EWS/Exchange.asmx",
@@ -50,7 +50,7 @@ def ews_credentials():
             auth_type="OAuth 2.0",
         )
         ews_account = Account(
-            primary_smtp_address="911@reiz.tech", config=config, autodiscover=False
+            primary_smtp_address="<primary_smtp_address>", config=config, autodiscover=False
         )
         return ews_account
     except Exception as e:
@@ -104,12 +104,12 @@ def compose_email(app_id, app_name, password_expire, reason):
     ews_account = ews_credentials()
     subject = "App registration Secret Expiring Soon"
     
-    if reason == "skillit or sais":
-        to_recipient = "skillit@reiz.tech"
-    elif reason == "birthday":
-        to_recipient = "irot@reiz.tech"
-    elif reason == "reminder":
-        to_recipient = "irot@reiz.tech"
+    if reason == "name1 or name1":
+        to_recipient = "<to@recipient>"
+    elif reason == "name2":
+        to_recipient = "<to@recipient>"
+    elif reason == "name3":
+        to_recipient = "<to@recipient>"
 
     send_email_notification(ews_account, email_body,to_recipient, subject)
 
@@ -161,12 +161,12 @@ def main(mytimer: func.TimerRequest) -> None:
             for cred in password_credentials:
                 password_expire = cred['endDateTime']
                 if is_within_one_week(password_expire):
-                    if "skillit" in app_name or "sais" in app_name:
-                        compose_email(app_id, app_name, password_expire, "skillit or sais")
-                    elif "birthday" in app_name:
-                        compose_email(app_id, app_name, password_expire, "birthday")
-                    elif "reminder" in app_name:
-                        compose_email(app_id, app_name, password_expire, "reminder")
+                    if "<name1>" in app_name or "name1" in app_name:
+                        compose_email(app_id, app_name, password_expire, "name1 or name1")
+                    elif "name2" in app_name:
+                        compose_email(app_id, app_name, password_expire, "name2")
+                    elif "name3" in app_name:
+                        compose_email(app_id, app_name, password_expire, "name3")
 
         logging.info("Python timer trigger function ran at %s", vln_timestamp)
 
