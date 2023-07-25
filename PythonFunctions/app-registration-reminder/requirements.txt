@@ -1,0 +1,8 @@
+azure-functions
+azure-identity
+msgraph-core
+exchangelib
+azure-keyvault-secrets
+requests_oauthlib
+requests
+pytz
