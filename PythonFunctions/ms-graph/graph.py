@@ -1,20 +1,8 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
-
-# <UserAuthConfigSnippet>
 from configparser import SectionProxy
 from azure.identity import ClientSecretCredential
 from msgraph import GraphServiceClient
-from msgraph.generated.users.item.user_item_request_builder import UserItemRequestBuilder
-from msgraph.generated.users.item.mail_folders.item.messages.messages_request_builder import (
-    MessagesRequestBuilder)
-from msgraph.generated.users.item.send_mail.send_mail_post_request_body import (
-    SendMailPostRequestBody)
-from msgraph.generated.models.message import Message
-from msgraph.generated.models.item_body import ItemBody
-from msgraph.generated.models.body_type import BodyType
-from msgraph.generated.models.recipient import Recipient
-from msgraph.generated.models.email_address import EmailAddress
+import httpx
+
 
 class Graph:
     settings: SectionProxy
@@ -23,41 +11,53 @@ class Graph:
 
     def __init__(self, config: SectionProxy):
         self.settings = config
-        client_id = self.settings['clientId']
-        tenant_id = self.settings['tenantId']
-        client_secret = self.settings['clientSecret']
-        graph_scopes = self.settings['graphUserScopes'].split(' ')
+        client_id = self.settings["clientId"]
+        tenant_id = self.settings["tenantId"]
+        client_secret = self.settings["clientSecret"]
+        graph_scopes = self.settings["graphUserScopes"].split(" ")
 
-        self.client_secret_credential = ClientSecretCredential(tenant_id, client_id, client_secret)
-        self.user_client = GraphServiceClient(self.client_secret_credential, graph_scopes)
+        self.client_secret_credential = ClientSecretCredential(
+            tenant_id, client_id, client_secret
+        )
+        self.user_client = GraphServiceClient(
+            self.client_secret_credential, graph_scopes
+        )
 
     async def get_user_token(self):
-        # Assuming you want to obtain the token for a specific scope
-        graph_scopes = self.settings['graphUserScopes']
+        graph_scopes = self.settings["graphUserScopes"]
         access_token = self.client_secret_credential.get_token(graph_scopes)
         return access_token.token
 
-    # </GetUserTokenSnippet>
+    async def invite_guest_user(self):
+        token = await self.get_user_token()
+        invitedUserEmailAddress = self.settings["invitedUserEmailAddress"]
+        invitedUserId = self.settings["invitedUserId"]
+        ccName = self.settings["ccName"]
+        ccAddress = self.settings["ccAddress"]
 
-    # <GetUserSnippet>
-    async def get_user(self):
-        # Only request specific properties using $select
-        query_params = UserItemRequestBuilder.UserItemRequestBuilderGetQueryParameters(
-            select=['displayName', 'mail', 'userPrincipalName']
-        )
-
-        request_config = UserItemRequestBuilder.UserItemRequestBuilderGetRequestConfiguration(
-            query_parameters=query_params
-        )
-
-        user = await self.user_client.me.get(request_configuration=request_config)
-        return user
-    # </GetUserSnippet>
-
-
-
-    # <MakeGraphCallSnippet>
-    async def make_graph_call(self):
-        # INSERT YOUR CODE HERE
-        return
-    # </MakeGraphCallSnippet>
+        graph_url = "https://graph.microsoft.com/v1.0/invitations"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+        request_body = {
+            "invitedUserEmailAddress": f"{invitedUserEmailAddress}",
+            "sendInvitationMessage": True,
+            "invitedUserMessageInfo": {
+                "messageLanguage": "en-US",
+                "ccRecipients": [
+                    {
+                        "emailAddress": {
+                            "name": f"{ccName}",
+                            "address": f"{ccAddress}",
+                        }
+                    }
+                ],
+            },
+            "inviteRedirectUrl": "https://myapps.microsoft.com?tenantId=",
+            "invitedUser": {"id": f"{invitedUserId}"},
+            "resetRedemption": True,
+        }
+        async with httpx.AsyncClient() as client:
+            response = await client.post(graph_url, headers=headers, json=request_body)
+            return response.status_code, response.text
