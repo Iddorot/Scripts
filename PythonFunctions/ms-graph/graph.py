@@ -1,27 +1,24 @@
 from configparser import SectionProxy
-from azure.identity import ClientSecretCredential
+from azure.identity import InteractiveBrowserCredential
 from msgraph import GraphServiceClient
 import httpx
 
 
 class Graph:
     settings: SectionProxy
-    client_secret_credential: ClientSecretCredential
+    client_secret_credential: InteractiveBrowserCredential 
     user_client: GraphServiceClient
 
     def __init__(self, config: SectionProxy):
         self.settings = config
-        client_id = self.settings["clientId"]
         tenant_id = self.settings["tenantId"]
-        client_secret = self.settings["clientSecret"]
         graph_scopes = self.settings["graphUserScopes"].split(" ")
 
-        self.client_secret_credential = ClientSecretCredential(
-            tenant_id, client_id, client_secret
+        # Using InteractiveBrowserCredential to authenticate with user interaction
+        self.client_secret_credential = InteractiveBrowserCredential(
+            tenant_id=tenant_id,
         )
-        self.user_client = GraphServiceClient(
-            self.client_secret_credential, graph_scopes
-        )
+
 
     async def get_user_token(self):
         graph_scopes = self.settings["graphUserScopes"]
