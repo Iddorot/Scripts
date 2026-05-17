@@ -1,0 +1,68 @@
+**********************
+PowerShell transcript start
+Start time: 20260517142245
+Username: AD\IdoRot
+RunAs User: AD\IdoRot
+Configuration Name: 
+Machine: IBI-PF3D1J6R (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\Program Files\WindowsApps\Microsoft.PowerShell_7.6.1.0_x64__8wekyb3d8bbwe\pwsh.dll
+Process ID: 16644
+PSVersion: 7.6.1
+PSEdition: Core
+GitCommitId: 7.6.1
+OS: Microsoft Windows 10.0.26200
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.4
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+14:22:45  [i] [INFO]  Transcript started -> C:\repos\Scripts\SysScripts\External SharePoint Site\logs\run-20260517-142245.log
+
+  ==========================================
+   Entra Project Onboarding Wizard
+  ==========================================
+
+  -> SharePoint admin URL: https://ibicoil-admin.sharepoint.com
+
+14:23:28  >? [STEP]  =======================================================
+14:23:28  >? [STEP]   Project Onboarding: keyss-test  /  keyss.co.il
+14:23:28  >? [STEP]  =======================================================
+14:23:28  >? [STEP]  Connecting to Microsoft Graph...
+WARNING: Note: Sign in by Web Account Manager (WAM) is enabled by default on Windows. If using an embedded terminal, the interactive browser window may be hidden behind other windows.
+14:23:47  [OK] [SUCCESS]  Connected as IdoRot@ibi.co.il
+14:23:47  [i] [INFO]  Resolving approver email to ObjectId (idorot@ibi.co.il)...
+14:23:47  [OK] [SUCCESS]  Approver resolved: Ido Rot (IdoRot@ibi.co.il) -> 8e5c2b35-a54d-446f-9dbb-2b25c5a83fdc
+14:23:47  [i] [INFO]  Group name  : sharepoint-ext-keyss-test-members
+14:23:47  [i] [INFO]  Site URL    : https://ibicoil.sharepoint.com/sites/proj-keyss-test
+14:23:47  [i] [INFO]  Package name: keyss-test
+14:23:47  [i] [INFO]  Workflow    : Welcome - keyss-test external members
+14:23:47  [i] [INFO]  Duration    : 30 days
+14:23:47  >? [STEP]  --- Step 1: Trusted Domain [keyss.co.il] ---
+14:23:47  [i] [INFO]  Resolving tenant for domain: keyss.co.il
+14:23:48  [OK] [SUCCESS]  Resolved -> TenantId=82d20285-342e-42fd-8345-5f0b1b76e15e  DisplayName=Keystone Solutions & Strategy
+PS>TerminatingError(Invoke-MgGraphRequest): "GET https://graph.microsoft.com/v1.0/policies/crossTenantAccessPolicy/partners/82d20285-342e-42fd-8345-5f0b1b76e15e
+HTTP/2.0 404 Not Found
+Cache-Control: no-cache
+Vary: Accept-Encoding
+Strict-Transport-Security: max-age=31536000
+request-id: 1ed9eaa7-6ee3-4be1-8fab-4e60f7ea18ea
+client-request-id: ed134313-90c4-4f7f-85c6-dbdc5e12611d
+x-ms-ags-diagnostic: {"ServerInfo":{"DataCenter":"Israel Central","Slice":"E","Ring":"2","ScaleUnit":"002","RoleInstance":"TL3PEPF000002AD"}}
+x-ms-resource-unit: 1
+Date: Sun, 17 May 2026 11:23:49 GMT
+Content-Type: application/json
+
+{"error":{"code":"Directory_ObjectNotFound","message":"Unable to read the company information from the directory.","innerError":{"date":"2026-05-17T11:23:50","request-id":"1ed9eaa7-6ee3-4be1-8fab-4e60f7ea18ea","client-request-id":"ed134313-90c4-4f7f-85c6-dbdc5e12611d"}}}"
+>> TerminatingError(ConvertFrom-Json): "Conversion from JSON failed with error: Unexpected character encountered while parsing value: G. Path '', line 0, position 0."
+>> TerminatingError(ConvertFrom-Json): "Conversion from JSON failed with error: Unexpected character encountered while parsing value: G. Path '', line 0, position 0."
+>> TerminatingError(ConvertFrom-Json): "Conversion from JSON failed with error: Unexpected character encountered while parsing value: G. Path '', line 0, position 0."
+14:23:48  [ERR] [ERROR]  Fatal error: Conversion from JSON failed with error: Unexpected character encountered while parsing value: G. Path '', line 0, position 0.
+14:23:48  [ERR] [ERROR]  at Get-CrossTenantPartner, C:\repos\Scripts\SysScripts\External SharePoint Site\modules\step1-trusted-domain.ps1: line 44
+at Invoke-Step1-TrustedDomain, C:\repos\Scripts\SysScripts\External SharePoint Site\modules\step1-trusted-domain.ps1: line 137
+at <ScriptBlock>, C:\repos\Scripts\SysScripts\External SharePoint Site\main.ps1: line 173
+at <ScriptBlock>, <No file>: line 1
+**********************
+PowerShell transcript end
+End time: 20260517142348
+**********************

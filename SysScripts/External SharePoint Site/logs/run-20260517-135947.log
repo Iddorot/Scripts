@@ -1,0 +1,49 @@
+**********************
+PowerShell transcript start
+Start time: 20260517135947
+Username: AD\IdoRot
+RunAs User: AD\IdoRot
+Configuration Name: 
+Machine: IBI-PF3D1J6R (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\Program Files\WindowsApps\Microsoft.PowerShell_7.6.1.0_x64__8wekyb3d8bbwe\pwsh.dll
+Process ID: 16644
+PSVersion: 7.6.1
+PSEdition: Core
+GitCommitId: 7.6.1
+OS: Microsoft Windows 10.0.26200
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.4
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+13:59:47  [i] [INFO]  Transcript started -> C:\repos\Scripts\SysScripts\External SharePoint Site\logs\run-20260517-135947.log
+
+  ==========================================
+   Entra Project Onboarding Wizard
+  ==========================================
+
+  -> SharePoint admin URL: https://ibicoil-admin.sharepoint.com
+
+14:00:27  >? [STEP]  =======================================================
+14:00:27  >? [STEP]   Project Onboarding: keyss-test  /  keyss.co.il
+14:00:27  >? [STEP]  =======================================================
+14:00:27  [!!] [WARN]  Module 'Microsoft.Graph.Authentication' not found - installing...
+14:01:05  [!!] [WARN]  Module 'Microsoft.Graph.Identity.SignIns' not found - installing...
+WARNING: The version '2.37.0' of module 'Microsoft.Graph.Authentication' is currently in use. Retry the operation after closing the applications.
+14:01:35  [!!] [WARN]  Module 'Microsoft.Graph.Groups' not found - installing...
+WARNING: The version '2.37.0' of module 'Microsoft.Graph.Authentication' is currently in use. Retry the operation after closing the applications.
+14:02:00  [!!] [WARN]  Module 'PnP.PowerShell' not found - installing...
+14:02:38  >? [STEP]  Connecting to Microsoft Graph...
+WARNING: Note: Sign in by Web Account Manager (WAM) is enabled by default on Windows. If using an embedded terminal, the interactive browser window may be hidden behind other windows.
+>> TerminatingError(Connect-MgGraph): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: InteractiveBrowserCredential authentication failed: User canceled authentication. "
+14:04:38  [ERR] [ERROR]  Graph connection failed: InteractiveBrowserCredential authentication failed: User canceled authentication.
+PS>TerminatingError(Connect-MgGraph): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: InteractiveBrowserCredential authentication failed: User canceled authentication. "
+14:04:38  [ERR] [ERROR]  Fatal error: InteractiveBrowserCredential authentication failed: User canceled authentication.
+14:04:38  [ERR] [ERROR]  at Connect-ProjectGraph, C:\repos\Scripts\SysScripts\External SharePoint Site\modules\auth.ps1: line 49
+at <ScriptBlock>, C:\repos\Scripts\SysScripts\External SharePoint Site\main.ps1: line 134
+at <ScriptBlock>, <No file>: line 1
+**********************
+PowerShell transcript end
+End time: 20260517140438
+**********************
