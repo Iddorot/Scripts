@@ -258,7 +258,7 @@ function Invoke-Step3-SharePoint {
 
     # Splat shared connection params to avoid repeating them on every call
     $connParams = @{
-        TenantName      = $Config.SPTenantName
+        TenantName      = $Config.TenantName
         ClientId        = $Config.ClientId
         CertFolder      = $Config.CertFolder
         ApplicationName = $Config.ApplicationName
