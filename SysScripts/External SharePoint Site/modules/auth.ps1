@@ -34,17 +34,6 @@ function Connect-ProjectGraph {
     Write-Log "STEP" "Connecting to Microsoft Graph..."
 
     try {
-        # Check if already connected with the right scopes
-        $ctx = Get-MgContext -ErrorAction SilentlyContinue
-        if ($ctx) {
-            $missing = $RequiredScopes | Where-Object { $_ -notin $ctx.Scopes }
-            if ($missing.Count -eq 0) {
-                Write-Log "SUCCESS" "Already connected as $($ctx.Account)"
-                return
-            }
-            Write-Log "WARN" "Re-connecting - missing scopes: $($missing -join ', ')"
-        }
-
         $connectParams = @{ Scopes = $RequiredScopes }
         Connect-MgGraph @connectParams -NoWelcome
         Write-Log "SUCCESS" "Connected as $((Get-MgContext).Account)"
