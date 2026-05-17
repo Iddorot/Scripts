@@ -82,14 +82,6 @@ function Resolve-UserEmailToId {
     return $user.id
 }
 
-function Build-SPAdminUrl {
-    param([string]$TenantUrl)
-    if ($TenantUrl -match '^(https://)([\w-]+)(\.sharepoint\.com.*)$') {
-        return "$($Matches[1])$($Matches[2])-admin$($Matches[3])"
-    }
-    throw "Cannot derive admin URL from '$TenantUrl'. Expected format: https://<tenant>.sharepoint.com"
-}
-
 # ---------------------------------------------------------------------------
 # Start transcript
 # ---------------------------------------------------------------------------
@@ -105,19 +97,19 @@ try {
     Write-Host "  ==========================================" -ForegroundColor Cyan
     Write-Host ""
 
-    $ProjectName      = Read-NonEmpty "Project name"
-    $ExternalDomain   = Read-NonEmpty "External organisation domain (e.g. contoso.com)"
-    $SPTenantUrl      = Read-NonEmpty "SharePoint tenant URL (e.g. https://yourtenant.sharepoint.com)"
-    $SPAdminUrl       = Build-SPAdminUrl -TenantUrl $SPTenantUrl
-    Write-Host "  -> SharePoint admin URL: $SPAdminUrl" -ForegroundColor DarkGray
+    $ProjectName    = Read-NonEmpty "Project name"
+    $ExternalDomain = Read-NonEmpty "External organisation domain (e.g. contoso.com)"
+    $SPTenantName   = Read-NonEmpty "SharePoint tenant name (e.g. contoso)"
+    Write-Host "  -> SharePoint URL      : https://$SPTenantName.sharepoint.com" -ForegroundColor DarkGray
+    Write-Host "  -> SharePoint admin URL: https://$SPTenantName-admin.sharepoint.com" -ForegroundColor DarkGray
 
-    $ApproverEmail    = Read-NonEmpty "Approver email (internal user who approves access requests)"
+    $ApproverEmail  = Read-NonEmpty "Approver email (internal user who approves access requests)"
 
-    $durationChoice   = Read-Choice -Prompt "Access duration (days)" -Options @("30","90","180","360")
+    $durationChoice     = Read-Choice -Prompt "Access duration (days)" -Options @("30","90","180","360")
     $AccessDurationDays = [int]$durationChoice
 
     $CatalogName = (Read-Host "Entitlement catalog name [External Projects]").Trim()
-    if (-not $CatalogName) { $CatalogName = "External Projects" }
+    if (-not $CatalogName) { $CatalogName = "SharePoint Groups for Externals" }
 
     Write-Host ""
 
@@ -138,12 +130,11 @@ try {
 
     # Build config
     $config = New-ProjectConfig `
-        -ProjectName       $ProjectName `
-        -ExternalDomain    $ExternalDomain `
-        -SPTenantUrl       $SPTenantUrl `
-        -SPAdminUrl        $SPAdminUrl `
-        -CatalogName       $CatalogName `
-        -ApproverObjectId  $ApproverObjectId
+        -ProjectName      $ProjectName `
+        -ExternalDomain   $ExternalDomain `
+        -SPTenantName     $SPTenantName `
+        -CatalogName      $CatalogName `
+        -ApproverObjectId $ApproverObjectId
 
     if ($SiteUrl) { $config.SiteUrl = $SiteUrl }
 
@@ -243,4 +234,3 @@ catch {
 finally {
     if (-not $NoTranscript) { Stop-RunLog }
 }
- 

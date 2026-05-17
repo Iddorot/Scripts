@@ -14,10 +14,8 @@ function New-ProjectConfig {
         [string]$ExternalDomain,
 
         [Parameter(Mandatory)]
-        [string]$SPTenantUrl,
-
-        # Derived automatically if not supplied
-        [string]$SPAdminUrl     = "",
+        # Just the tenant name, e.g. "contoso" (not the full URL)
+        [string]$SPTenantName,
 
         # --- Entitlement Management ---
         # Resource catalog to attach the access package to (leave empty to auto-create)
@@ -31,16 +29,8 @@ function New-ProjectConfig {
         [string]$EmailSenderName = "IT Operations"
     )
 
-    $safe = $ProjectName.ToLower() -replace '[^a-z0-9\-]', '-'
-
-    # Derive admin URL from tenant URL if not explicitly supplied
-    if (-not $SPAdminUrl) {
-        if ($SPTenantUrl -match '^(https://)([\w-]+)(\.sharepoint\.com.*)$') {
-            $SPAdminUrl = "$($Matches[1])$($Matches[2])-admin$($Matches[3])"
-        } else {
-            throw "Cannot derive SPAdminUrl from '$SPTenantUrl'. Expected: https://<tenant>.sharepoint.com"
-        }
-    }
+    $safe       = $ProjectName.ToLower() -replace '[^a-z0-9\-]', '-'
+    $tenantName = $SPTenantName.ToLower().Trim()
 
     return [PSCustomObject]@{
         # Raw inputs
@@ -50,16 +40,16 @@ function New-ProjectConfig {
         # Derived names (single source of truth)
         GroupName          = "sharepoint-ext-$safe-members"
         GroupDescription   = "External members for project: $ProjectName"
-        SiteName           = "proj-$safe"
-        SiteAlias          = "proj-$safe"
-        SiteTitle          = "Project $ProjectName"
+        SiteName           = "External $safe"
+        SiteAlias          = "External $safe"
+        SiteTitle          = "External $ProjectName"
         AccessPackageName  = $ProjectName
         WorkflowName       = "Welcome - $ProjectName external members"
 
-        # SharePoint
-        SPAdminUrl         = $SPAdminUrl
-        SPTenantUrl        = $SPTenantUrl
-        SiteUrl            = "$SPTenantUrl/sites/proj-$safe"
+        # SharePoint (derived from tenant name)
+        SPTenantUrl        = "https://$tenantName.sharepoint.com"
+        SPAdminUrl         = "https://$tenantName-admin.sharepoint.com"
+        SiteUrl            = "https://$tenantName.sharepoint.com/sites/ext-$safe"
 
         # Entitlement / Lifecycle
         CatalogName        = $CatalogName
@@ -67,4 +57,3 @@ function New-ProjectConfig {
         EmailSenderName    = $EmailSenderName
     }
 }
- 
