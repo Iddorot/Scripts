@@ -41,8 +41,12 @@ function Get-CrossTenantPartner {
     }
     catch {
         $err  = $_
-        $body = $err.ErrorDetails.Message | ConvertFrom-Json -ErrorAction SilentlyContinue
-        if ($body.error.code -in @("Request_ResourceNotFound", "ResourceNotFound")) {
+        $rawMessage = $err.ErrorDetails.Message
+        $body       = if ($rawMessage -match '(\{.*\})') {
+            $Matches[1] | ConvertFrom-Json -ErrorAction SilentlyContinue
+        }
+
+        if ($rawMessage -match "Request_ResourceNotFound|Directory_ObjectNotFound" -or $err.Exception.Message -match "404") {
             return $null
         }
         Write-Log "ERROR" "Error checking cross-tenant partner: $($body.error.message) $err"
