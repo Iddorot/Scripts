@@ -50,7 +50,7 @@ function New-ProjectConfig {
         SPTenantUrl        = "https://$tenantName.sharepoint.com"
         SPAdminUrl         = "https://$tenantName-admin.sharepoint.com"
         SiteUrl            = "https://$tenantName.sharepoint.com/sites/ext-$safe"
-
+        TenantName         =  $tenantName
         # Entitlement / Lifecycle
         CatalogName        = $CatalogName
         ApproverObjectId   = $ApproverObjectId
