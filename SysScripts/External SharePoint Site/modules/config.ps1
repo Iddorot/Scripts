@@ -40,16 +40,16 @@ function New-ProjectConfig {
         # Derived names (single source of truth)
         GroupName          = "sharepoint-ext-$safe-members"
         GroupDescription   = "External members for project: $ProjectName"
-        SiteName           = "proj-$safe"
-        SiteAlias          = "proj-$safe"
-        SiteTitle          = "Project $ProjectName"
+        SiteName           = "External $safe"
+        SiteAlias          = "External $safe"
+        SiteTitle          = "External $ProjectName"
         AccessPackageName  = $ProjectName
         WorkflowName       = "Welcome - $ProjectName external members"
 
         # SharePoint (derived from tenant name)
         SPTenantUrl        = "https://$tenantName.sharepoint.com"
         SPAdminUrl         = "https://$tenantName-admin.sharepoint.com"
-        SiteUrl            = "https://$tenantName.sharepoint.com/sites/proj-$safe"
+        SiteUrl            = "https://$tenantName.sharepoint.com/sites/ext-$safe"
 
         # Entitlement / Lifecycle
         CatalogName        = $CatalogName
