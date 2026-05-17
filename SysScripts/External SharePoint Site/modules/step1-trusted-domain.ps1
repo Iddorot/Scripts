@@ -41,12 +41,8 @@ function Get-CrossTenantPartner {
     }
     catch {
         $err  = $_
-        $rawMessage = $err.ErrorDetails.Message
-        $body       = if ($rawMessage -match '(\{.*\})') {
-            $Matches[1] | ConvertFrom-Json -ErrorAction SilentlyContinue
-        }
-
-        if ($rawMessage -match "Request_ResourceNotFound|Directory_ObjectNotFound" -or $err.Exception.Message -match "404") {
+        $body = $err.ErrorDetails.Message | ConvertFrom-Json -ErrorAction SilentlyContinue
+        if ($body.error.code -in @("Request_ResourceNotFound", "ResourceNotFound")) {
             return $null
         }
         Write-Log "ERROR" "Error checking cross-tenant partner: $($body.error.message) $err"
@@ -83,21 +79,11 @@ function Add-CrossTenantPartner {
 function Set-CrossTenantTrustSettings {
     param(
         [Parameter(Mandatory)][string]$TenantId,
-        [bool]$TrustMfa              = $false,
-        [bool]$TrustCompliantDevices = $false,
-        [bool]$TrustHybridDevices    = $false
     )
 
     Write-Log "INFO" "Configuring inbound B2B collaboration trust for tenant $TenantId"
 
-    $inboundTrust = @{
-        isMfaAccepted                       = $TrustMfa
-        isCompliantDeviceAccepted           = $TrustCompliantDevices
-        isHybridAzureADJoinedDeviceAccepted = $TrustHybridDevices
-    }
-
     $b2bCollab = @{
-        inboundTrust            = $inboundTrust
         b2bCollaborationInbound = @{
             usersAndGroups = @{
                 accessType = "allowed"
@@ -119,7 +105,7 @@ function Set-CrossTenantTrustSettings {
     try {
         $uri = "https://graph.microsoft.com/v1.0/policies/crossTenantAccessPolicy/partners/$TenantId"
         Invoke-MgGraphRequest -Method PATCH -Uri $uri -Body $body -ContentType "application/json" -ErrorAction Stop
-        Write-Log "SUCCESS" "Trust settings applied (MFA=$TrustMfa, Compliant=$TrustCompliantDevices)"
+        Write-Log "SUCCESS" "Trust settings applied"
     }
     catch {
         $err     = $_
