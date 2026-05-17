@@ -18,11 +18,11 @@
 function Get-SharePointSite {
     param(
         [Parameter(Mandatory)][string]$SiteUrl,
-        [Parameter(Mandatory)][string]$AdminUrl
+        [Parameter(Mandatory)][string]$SPTenantUrl
     )
 
     try {
-        Connect-PnPOnline -Url $AdminUrl -UseWebLogin -ErrorAction Stop
+        Connect-PnPOnline -Url $SPTenantUrl -UseWebLogin -ErrorAction Stop
         $site = Get-PnPTenantSite -Url $SiteUrl -ErrorAction SilentlyContinue
         return $site
     }
@@ -36,7 +36,7 @@ function Get-SharePointSite {
 # --------------------------------------------------------------------------
 function New-ProjectSharePointSite {
     param(
-        [Parameter(Mandatory)][string]$AdminUrl,
+        [Parameter(Mandatory)][string]$SPTenantUrl,
         [Parameter(Mandatory)][string]$SiteAlias,
         [Parameter(Mandatory)][string]$SiteTitle,
         [Parameter(Mandatory)][string]$SiteUrl
@@ -45,7 +45,7 @@ function New-ProjectSharePointSite {
     Write-Log "INFO" "Creating SharePoint site: $SiteTitle ($SiteUrl)"
 
     try {
-        Connect-PnPOnline -Url $AdminUrl -UseWebLogin -ErrorAction Stop
+        Connect-PnPOnline -Url $SPTenantUrl -ErrorAction Stop
 
         # Create team site (can swap Template to "SITEPAGEPUBLISHING#0" for Comms site)
         New-PnPSite -Type TeamSite `
@@ -78,14 +78,14 @@ function New-ProjectSharePointSite {
 # --------------------------------------------------------------------------
 function Set-SiteExternalSharing {
     param(
-        [Parameter(Mandatory)][string]$AdminUrl,
+        [Parameter(Mandatory)][string]$SPTenantUrl,
         [Parameter(Mandatory)][string]$SiteUrl
     )
 
     Write-Log "INFO" "Enabling external sharing on $SiteUrl"
 
     try {
-        Connect-PnPOnline -Url $AdminUrl -UseWebLogin -ErrorAction Stop
+        Connect-PnPOnline -Url $SPTenantUrl -UseWebLogin -ErrorAction Stop
         Set-PnPTenantSite -Url $SiteUrl `
             -SharingCapability ExternalUserAndGuestSharing `
             -ErrorAction Stop
@@ -140,20 +140,20 @@ function Invoke-Step3-SharePoint {
     Write-Log "STEP" "--- Step 3: SharePoint Site [$($Config.SiteTitle)] ---"
 
     # Check if site already exists
-    $existing = Get-SharePointSite -SiteUrl $Config.SiteUrl -AdminUrl $Config.SPAdminUrl
+    $existing = Get-SharePointSite -SiteUrl $Config.SiteUrl -SPTenantUrl $Config.SPTenantUrl
 
     if ($existing) {
         Write-Log "SKIP" "Site '$($Config.SiteUrl)' already exists."
     } else {
         New-ProjectSharePointSite `
-            -AdminUrl   $Config.SPAdminUrl `
+            -SPTenantUrl   $Config.SPTenantUrl `
             -SiteAlias  $Config.SiteAlias `
             -SiteTitle  $Config.SiteTitle `
             -SiteUrl    $Config.SiteUrl
     }
 
     # Always ensure sharing + membership are correct
-    Set-SiteExternalSharing -AdminUrl $Config.SPAdminUrl -SiteUrl $Config.SiteUrl
+    Set-SiteExternalSharing -SPTenantUrl $Config.SPTenantUrl -SiteUrl $Config.SiteUrl
     Add-GroupAsSiteMembers  -SiteUrl  $Config.SiteUrl    -GroupId $GroupId
 
     Write-Log "SUCCESS" "Step 3 complete - site ready at $($Config.SiteUrl)"
