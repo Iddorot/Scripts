@@ -45,22 +45,33 @@ The script connects to Microsoft Graph and requests the following delegated scop
 
 ## Usage
 
-### Standard run (interactive wizard)
+### Full CLI (no prompts)
+
+```powershell
+.\main.ps1 -ProjectName "Acme Portal" `
+           -ExternalDomain "acme.com" `
+           -SPTenantName "contoso" `
+           -ApproverEmail "approver@contoso.com" `
+           -AccessDurationDays 90 `
+           -CatalogName "SharePoint Groups for Externals"
+```
+
+### Interactive wizard (omit any or all parameters)
 
 ```powershell
 .\main.ps1
 ```
 
-The script will prompt for:
+Any parameter not supplied on the CLI will be prompted interactively:
 
-| Prompt | Example |
-|--------|---------|
-| Project name | `Acme Portal` |
-| External organisation domain | `acme.com` |
-| SharePoint tenant name | `contoso` (just the name, not the full URL) |
-| Approver email | `approver@yourtenant.com` (resolved to ObjectId automatically) |
-| Access duration (days) | `30`, `90`, `180`, or `360` |
-| Entitlement catalog name | Press Enter to use default: `SharePoint Groups for Externals` |
+| Parameter | Prompt | Example |
+|-----------|--------|---------|
+| `-ProjectName` | Project name | `Acme Portal` |
+| `-ExternalDomain` | External organisation domain | `acme.com` |
+| `-SPTenantName` | SharePoint tenant name | `contoso` (name only, not the full URL) |
+| `-ApproverEmail` | Approver email | `approver@contoso.com` (resolved to ObjectId automatically) |
+| `-AccessDurationDays` | Access duration (days) | `30`, `90`, `180`, or `360` |
+| `-CatalogName` | Entitlement catalog name | Defaults to `SharePoint Groups for Externals` |
 
 ### Partial re-runs (step-skipping)
 
