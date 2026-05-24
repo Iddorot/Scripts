@@ -1,8 +1,8 @@
 # =============================================================================
 # modules/step3-sharepoint.ps1
 #
-# Creates a SharePoint Team Site for the project, enables external sharing,
-# and assigns the Entra group as Site Members.
+# Creates a SharePoint Communication Site for the project, sets sharing to
+# ExistingExternalUserSharingOnly, and assigns the Entra group as Site Members.
 #
 # Uses PnP PowerShell (PnP.PowerShell module).
 #   Install-Module PnP.PowerShell -Scope CurrentUser
@@ -14,15 +14,16 @@
 
 # --------------------------------------------------------------------------
 # Connect-ProjectSharePoint                       <- internal helper
-#   Opens an interactive PnP connection to the given URL.
+#   Opens an interactive PnP connection to the given URL using a client ID.
 # --------------------------------------------------------------------------
 function Connect-ProjectSharePoint {
     param(
-        [Parameter(Mandatory)][string]$Url
+        [Parameter(Mandatory)][string]$Url,
+        [Parameter(Mandatory)][string]$ClientId
     )
 
-    Write-Log "INFO" "Connecting to SharePoint: $Url"
-    Connect-PnPOnline -Url $Url -Interactive -ErrorAction Stop
+    Write-Log "INFO" "Connecting to SharePoint: $Url  (ClientId: $ClientId)"
+    Connect-PnPOnline -Url $Url -ClientId $ClientId -Interactive -ErrorAction Stop
 }
 
 
@@ -33,11 +34,12 @@ function Connect-ProjectSharePoint {
 function Get-SharePointSite {
     param(
         [Parameter(Mandatory)][string]$TenantUrl,
-        [Parameter(Mandatory)][string]$SiteUrl
+        [Parameter(Mandatory)][string]$SiteUrl,
+        [Parameter(Mandatory)][string]$ClientId
     )
 
     try {
-        Connect-ProjectSharePoint -Url $TenantUrl
+        Connect-ProjectSharePoint -Url $TenantUrl -ClientId $ClientId
         return Get-PnPTenantSite -Url $SiteUrl -ErrorAction SilentlyContinue
     }
     catch { return $null }
@@ -46,25 +48,24 @@ function Get-SharePointSite {
 
 # --------------------------------------------------------------------------
 # New-ProjectSharePointSite
-#   Creates a Team Site, waits for provisioning, then returns the site object.
+#   Creates a Communication Site, waits for provisioning, returns the site object.
 # --------------------------------------------------------------------------
 function New-ProjectSharePointSite {
     param(
         [Parameter(Mandatory)][string]$TenantUrl,
-        [Parameter(Mandatory)][string]$SiteAlias,
         [Parameter(Mandatory)][string]$SiteTitle,
-        [Parameter(Mandatory)][string]$SiteUrl
+        [Parameter(Mandatory)][string]$SiteUrl,
+        [Parameter(Mandatory)][string]$ClientId
     )
 
     Write-Log "INFO" "Creating SharePoint site: $SiteTitle ($SiteUrl)"
 
     try {
-        Connect-ProjectSharePoint -Url $TenantUrl
+        Connect-ProjectSharePoint -Url $TenantUrl -ClientId $ClientId
 
-        New-PnPSite -Type TeamSite `
-                    -Title    $SiteTitle `
-                    -Alias    $SiteAlias `
-                    -IsPublic:$false `
+        New-PnPSite -Type CommunicationSite `
+                    -Title $SiteTitle `
+                    -Url   $SiteUrl `
                     -ErrorAction Stop | Out-Null
 
         Write-Log "INFO" "Waiting for site provisioning..."
@@ -88,24 +89,24 @@ function New-ProjectSharePointSite {
 
 # --------------------------------------------------------------------------
 # Set-SiteExternalSharing
-#   Sets the sharing capability to ExternalUserAndGuestSharing.
+#   Sets sharing to ExistingExternalUserSharingOnly (already-invited users only).
 # --------------------------------------------------------------------------
 function Set-SiteExternalSharing {
     param(
         [Parameter(Mandatory)][string]$TenantUrl,
-        [Parameter(Mandatory)][string]$SiteUrl
+        [Parameter(Mandatory)][string]$SiteUrl,
+        [Parameter(Mandatory)][string]$ClientId
     )
 
     Write-Log "INFO" "Enabling external sharing on $SiteUrl"
 
+    Connect-ProjectSharePoint -Url $TenantUrl -ClientId $ClientId
+
     try {
-        Connect-ProjectSharePoint -Url $TenantUrl
-
         Set-PnPTenantSite -Url $SiteUrl `
-            -SharingCapability ExternalUserAndGuestSharing `
+            -SharingCapability ExistingExternalUserSharingOnly `
             -ErrorAction Stop
-
-        Write-Log "SUCCESS" "External sharing enabled."
+        Write-Log "SUCCESS" "External sharing set to 'ExistingExternalUserSharingOnly' (already-invited users only)."
     }
     catch {
         Write-Log "ERROR" "Failed to set sharing capability: $_"
@@ -121,13 +122,14 @@ function Set-SiteExternalSharing {
 function Add-GroupAsSiteMembers {
     param(
         [Parameter(Mandatory)][string]$SiteUrl,
-        [Parameter(Mandatory)][string]$GroupId
+        [Parameter(Mandatory)][string]$GroupId,
+        [Parameter(Mandatory)][string]$ClientId
     )
 
     Write-Log "INFO" "Adding Entra group $GroupId as Members on $SiteUrl"
 
     try {
-        Connect-ProjectSharePoint -Url $SiteUrl
+        Connect-ProjectSharePoint -Url $SiteUrl -ClientId $ClientId
 
         $spMembers = Get-PnPGroup -AssociatedMemberGroup -ErrorAction Stop
 
@@ -153,25 +155,26 @@ function Add-GroupAsSiteMembers {
 function Invoke-Step3-SharePoint {
     param(
         [Parameter(Mandatory)][PSCustomObject]$Config,
-        [Parameter(Mandatory)][string]$GroupId
+        [Parameter(Mandatory)][string]$GroupId,
+        [Parameter(Mandatory)][string]$ClientId
     )
 
     Write-Log "STEP" "--- Step 3: SharePoint Site [$($Config.SiteTitle)] ---"
 
-    $existing = Get-SharePointSite -TenantUrl $Config.SPTenantUrl -SiteUrl $Config.SiteUrl
+    $existing = Get-SharePointSite -TenantUrl $Config.SPAdminUrl -SiteUrl $Config.SiteUrl -ClientId $ClientId
 
     if ($existing) {
-        Write-Log "SKIP" "Site '$($Config.SiteUrl)' already exists."
+        Write-Log "SKIP" "Site '$($Config.SiteUrl)' already exists - verifying settings..."
     } else {
         New-ProjectSharePointSite `
-            -TenantUrl  $Config.SPTenantUrl `
-            -SiteAlias  $Config.SiteAlias `
+            -TenantUrl  $Config.SPAdminUrl `
             -SiteTitle  $Config.SiteTitle `
-            -SiteUrl    $Config.SiteUrl
+            -SiteUrl    $Config.SiteUrl `
+            -ClientId   $ClientId
     }
 
-    Set-SiteExternalSharing -TenantUrl $Config.SPTenantUrl -SiteUrl $Config.SiteUrl
-    Add-GroupAsSiteMembers  -SiteUrl $Config.SiteUrl -GroupId $GroupId
+    Set-SiteExternalSharing -TenantUrl $Config.SPAdminUrl -SiteUrl $Config.SiteUrl -ClientId $ClientId
+    Add-GroupAsSiteMembers  -SiteUrl $Config.SiteUrl -GroupId $GroupId -ClientId $ClientId
 
     Write-Log "SUCCESS" "Step 3 complete - site ready at $($Config.SiteUrl)"
     return [PSCustomObject]@{

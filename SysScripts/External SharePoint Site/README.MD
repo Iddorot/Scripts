@@ -51,6 +51,7 @@ The script connects to Microsoft Graph and requests the following delegated scop
 .\main.ps1 -ProjectName "Acme Portal" `
            -ExternalDomain "acme.com" `
            -SPTenantName "contoso" `
+           -PnPClientId "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" `
            -ApproverEmail "approver@contoso.com" `
            -AccessDurationDays 90 `
            -CatalogName "SharePoint Groups for Externals"
@@ -69,6 +70,7 @@ Any parameter not supplied on the CLI will be prompted interactively:
 | `-ProjectName` | Project name | `Acme Portal` |
 | `-ExternalDomain` | External organisation domain | `acme.com` |
 | `-SPTenantName` | SharePoint tenant name | `contoso` (name only, not the full URL) |
+| `-PnPClientId` | PnP app Client ID | Client ID of the Entra app registration used by PnP PowerShell (Step 3) |
 | `-ApproverEmail` | Approver email | `approver@contoso.com` (resolved to ObjectId automatically) |
 | `-AccessDurationDays` | Access duration (days) | `30`, `90`, `180`, or `360` |
 | `-CatalogName` | Entitlement catalog name | Defaults to `SharePoint Groups for Externals` |

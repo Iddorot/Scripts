@@ -22,6 +22,9 @@ param(
     # SharePoint tenant name only, e.g. "contoso" (not the full URL)
     [string]$SPTenantName   = "",
 
+    # Client ID of the Entra app registration used by PnP PowerShell (Step 3)
+    [string]$PnPClientId    = "",
+
     # Internal user who approves access requests (resolved to ObjectId)
     [string]$ApproverEmail  = "",
 
@@ -123,6 +126,7 @@ try {
     Write-Host "  -> SharePoint URL      : https://$SPTenantName.sharepoint.com" -ForegroundColor DarkGray
     Write-Host "  -> SharePoint admin URL: https://$SPTenantName-admin.sharepoint.com" -ForegroundColor DarkGray
 
+    if (-not $PnPClientId)    { $PnPClientId    = Read-NonEmpty "PnP app Client ID (Entra app registration used by PnP PowerShell)" }
     if (-not $ApproverEmail)  { $ApproverEmail  = Read-NonEmpty "Approver email (internal user who approves access requests)" }
 
     if ($AccessDurationDays -eq 0) {
@@ -206,7 +210,7 @@ try {
     # Step 3 - SharePoint site
     # -----------------------------------------------------------------------
     if (-not $SkipStep3) {
-        $step3Result = Invoke-Step3-SharePoint -Config $config -GroupId $GroupId
+        $step3Result = Invoke-Step3-SharePoint -Config $config -GroupId $GroupId -ClientId $PnPClientId
     } else {
         Write-Log "SKIP" "Step 3 skipped (SharePoint site). Using URL=$($config.SiteUrl)"
         $step3Result = [PSCustomObject]@{ SiteUrl = $config.SiteUrl; AlreadyExisted = $true }
