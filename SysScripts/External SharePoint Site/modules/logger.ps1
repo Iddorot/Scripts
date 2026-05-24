@@ -59,7 +59,11 @@ function Assert-Module {
             Write-Log "WARN" "Module '$name' not found - installing..."
             Install-Module $name -Scope CurrentUser -Force -AllowClobber
         }
-        Import-Module $name -ErrorAction Stop
+        if (-not (Get-Module -Name $name)) {
+            Import-Module $name -ErrorAction Stop
+        } else {
+            Write-Log "DEBUG" "Module '$name' already loaded, skipping import"
+        }
     }
 }
  
