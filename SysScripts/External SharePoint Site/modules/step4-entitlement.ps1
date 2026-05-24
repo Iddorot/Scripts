@@ -99,17 +99,24 @@ function Add-GroupResourceToPackage {
 
     }
 
-    # 2. Get catalog resource ID for the group
+    # 2+3. Get catalog resource with roles expanded in one call (avoids unreliable /roles sub-endpoint)
     $encoded  = [Uri]::EscapeDataString($GroupId)
-    $resUri   = "https://graph.microsoft.com/v1.0/identityGovernance/entitlementManagement/catalogs/$CatalogId/resources?`$filter=originId eq '$encoded'"
-    Start-Sleep -Seconds 3  # brief wait for resource to register
-    $resource = (Invoke-MgGraphRequest -Method GET -Uri $resUri -ErrorAction Stop).value[0]
+    $resUri   = "https://graph.microsoft.com/v1.0/identityGovernance/entitlementManagement/catalogs/$CatalogId/resources?`$filter=originId eq '$encoded'&`$expand=roles,scopes"
+    $resource   = $null
+    $memberRole = $null
+    $timeout    = 300; $elapsed = 0; $wait = 5
+    do {
+        Write-Log "INFO" "Waiting ${wait}s for catalog resource and roles to appear... (${elapsed}s elapsed)"
+        Start-Sleep -Seconds $wait; $elapsed += $wait; $wait += 5
+        $resource = (Invoke-MgGraphRequest -Method GET -Uri $resUri -ErrorAction Stop).value[0]
+        if ($resource) {
+            $memberRole = $resource.roles | Where-Object { $_.displayName -eq "Member" } | Select-Object -First 1
+        }
+    } while (-not $memberRole -and $elapsed -lt $timeout)
 
-    # 3. Get the "Member" role for this group resource
-    $rolesUri  = "https://graph.microsoft.com/v1.0/identityGovernance/entitlementManagement/catalogs/$CatalogId/resources/$($resource.id)/roles"
-    $memberRole = (Invoke-MgGraphRequest -Method GET -Uri $rolesUri -ErrorAction Stop).value |
-                  Where-Object { $_.displayName -eq "Member" } |
-                  Select-Object -First 1
+    if (-not $resource)   { throw "Catalog resource for group '$GroupId' did not appear after $timeout seconds." }
+    if (-not $memberRole) { throw "Member role for catalog resource '$($resource.id)' did not appear after $timeout seconds." }
+    Write-Log "INFO" "Catalog resource and Member role found (resourceId=$($resource.id), roleId=$($memberRole.id))"
 
     # 4. Create resource role scope on the package
     $scopeBody = @{
@@ -186,6 +193,71 @@ function New-ExternalRequestPolicy {
                 }
             )
         }
+        questions = @(
+            @{
+                "@odata.type"     = "#microsoft.graph.accessPackageTextInputQuestion"
+                isRequired        = $true
+                isAnswerEditable  = $false
+                sequence          = 1
+                isSingleLineQuestion = $true
+                text = @{ defaultText = "Please enter your company name"; localizedTexts = @() }
+                attributeName     = "companyName"
+            }
+            @{
+                "@odata.type"     = "#microsoft.graph.accessPackageTextInputQuestion"
+                isRequired        = $true
+                isAnswerEditable  = $false
+                sequence          = 2
+                isSingleLineQuestion = $true
+                text = @{ defaultText = "Please enter your full name"; localizedTexts = @() }
+                attributeName     = "displayName"
+            }
+            @{
+                "@odata.type"     = "#microsoft.graph.accessPackageTextInputQuestion"
+                isRequired        = $true
+                isAnswerEditable  = $false
+                sequence          = 3
+                isSingleLineQuestion = $true
+                text = @{ defaultText = "Please enter your job title"; localizedTexts = @() }
+                attributeName     = "jobTitle"
+            }
+            @{
+                "@odata.type"     = "#microsoft.graph.accessPackageTextInputQuestion"
+                isRequired        = $true
+                isAnswerEditable  = $false
+                sequence          = 4
+                isSingleLineQuestion = $true
+                text = @{ defaultText = "Enter your work email address"; localizedTexts = @() }
+                attributeName     = "mail"
+            }
+            @{
+                "@odata.type"     = "#microsoft.graph.accessPackageTextInputQuestion"
+                isRequired        = $true
+                isAnswerEditable  = $false
+                sequence          = 5
+                isSingleLineQuestion = $true
+                text = @{ defaultText = "Enter your given name"; localizedTexts = @() }
+                attributeName     = "givenName"
+            }
+            @{
+                "@odata.type"     = "#microsoft.graph.accessPackageTextInputQuestion"
+                isRequired        = $true
+                isAnswerEditable  = $true
+                sequence          = 6
+                isSingleLineQuestion = $true
+                text = @{ defaultText = "Enter your surname"; localizedTexts = @() }
+                attributeName     = "surname"
+            }
+            @{
+                "@odata.type"     = "#microsoft.graph.accessPackageTextInputQuestion"
+                isRequired        = $true
+                isAnswerEditable  = $false
+                sequence          = 7
+                isSingleLineQuestion = $true
+                text = @{ defaultText = "Enter your mobile phone number"; localizedTexts = @() }
+                attributeName     = "mobilePhone"
+            }
+        )
         accessPackage = @{ id = $PackageId }
     } | ConvertTo-Json -Depth 10
 
