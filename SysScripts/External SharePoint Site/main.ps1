@@ -1,16 +1,36 @@
 # =============================================================================
 # main.ps1
 #
-# Run with no arguments - the script prompts for everything interactively.
+# All parameters are optional. When omitted the script prompts interactively.
 #
-# Step-skipping flags (still available for partial re-runs):
+# Full CLI example:
+#   .\main.ps1 -ProjectName "Acme Portal" -ExternalDomain "acme.com" `
+#              -SPTenantName "contoso" -ApproverEmail "approver@contoso.com" `
+#              -AccessDurationDays 90 -CatalogName "SharePoint Groups for Externals"
+#
+# Step-skipping flags (for partial re-runs):
 #   .\main.ps1 -SkipStep1
 #   .\main.ps1 -StartFromStep 3 -GroupId "..."
 # =============================================================================
 
 [CmdletBinding(SupportsShouldProcess)]
 param(
-    # Step-skipping (optional - use when resuming a partial run)
+    # ---- Project inputs (all optional - prompted if not supplied) ------------
+    [string]$ProjectName    = "",
+    [string]$ExternalDomain = "",
+
+    # SharePoint tenant name only, e.g. "contoso" (not the full URL)
+    [string]$SPTenantName   = "",
+
+    # Internal user who approves access requests (resolved to ObjectId)
+    [string]$ApproverEmail  = "",
+
+    [ValidateSet(30, 90, 180, 360)]
+    [int]$AccessDurationDays = 0,
+
+    [string]$CatalogName    = "",
+
+    # ---- Step-skipping (optional - use when resuming a partial run) ----------
     [ValidateRange(1,5)]
     [int]$StartFromStep = 1,
 
@@ -97,19 +117,23 @@ try {
     Write-Host "  ==========================================" -ForegroundColor Cyan
     Write-Host ""
 
-    $ProjectName    = Read-NonEmpty "Project name"
-    $ExternalDomain = Read-NonEmpty "External organisation domain (e.g. contoso.com)"
-    $SPTenantName   = Read-NonEmpty "SharePoint tenant name (e.g. contoso)"
+    if (-not $ProjectName)    { $ProjectName    = Read-NonEmpty "Project name" }
+    if (-not $ExternalDomain) { $ExternalDomain = Read-NonEmpty "External organisation domain (e.g. contoso.com)" }
+    if (-not $SPTenantName)   { $SPTenantName   = Read-NonEmpty "SharePoint tenant name (e.g. contoso)" }
     Write-Host "  -> SharePoint URL      : https://$SPTenantName.sharepoint.com" -ForegroundColor DarkGray
     Write-Host "  -> SharePoint admin URL: https://$SPTenantName-admin.sharepoint.com" -ForegroundColor DarkGray
 
-    $ApproverEmail  = Read-NonEmpty "Approver email (internal user who approves access requests)"
+    if (-not $ApproverEmail)  { $ApproverEmail  = Read-NonEmpty "Approver email (internal user who approves access requests)" }
 
-    $durationChoice     = Read-Choice -Prompt "Access duration (days)" -Options @("30","90","180","360")
-    $AccessDurationDays = [int]$durationChoice
+    if ($AccessDurationDays -eq 0) {
+        $durationChoice     = Read-Choice -Prompt "Access duration (days)" -Options @("30","90","180","360")
+        $AccessDurationDays = [int]$durationChoice
+    }
 
-    $CatalogName = (Read-Host "Entitlement catalog name [External Projects]").Trim()
-    if (-not $CatalogName) { $CatalogName = "SharePoint Groups for Externals" }
+    if (-not $CatalogName) {
+        $CatalogName = (Read-Host "Entitlement catalog name [SharePoint Groups for Externals]").Trim()
+        if (-not $CatalogName) { $CatalogName = "SharePoint Groups for Externals" }
+    }
 
     Write-Host ""
 
