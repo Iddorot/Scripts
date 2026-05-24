@@ -32,19 +32,30 @@ function New-ProjectConfig {
     $safe       = $ProjectName.ToLower() -replace '[^a-z0-9\-]', '-'
     $tenantName = $SPTenantName.ToLower().Trim()
 
+    # Title-case helper: capitalises first letter of each segment (split by hyphen or space)
+    function ConvertTo-TitleCase ([string]$Text, [string]$Sep) {
+        return ($Text -split $Sep | ForEach-Object {
+            if ($_.Length -gt 0) { $_.Substring(0,1).ToUpper() + $_.Substring(1).ToLower() }
+            else { $_ }
+        }) -join $Sep
+    }
+
+    $safeTitle    = ConvertTo-TitleCase -Text $safe       -Sep '-'   # e.g. Acme-Portal
+    $projectTitle = ConvertTo-TitleCase -Text $ProjectName -Sep ' '  # e.g. Acme Portal
+
     return [PSCustomObject]@{
         # Raw inputs
         ProjectName        = $ProjectName
         ExternalDomain     = $ExternalDomain.ToLower().Trim()
 
-        # Derived names (single source of truth)
-        GroupName          = "sharepoint-ext-$safe-members"
-        GroupDescription   = "External members for project: $ProjectName"
-        SiteName           = "External $safe"
+        # Derived names (single source of truth — URLs/aliases stay lowercase)
+        GroupName          = "Sharepoint-Ext-$safeTitle-Members"
+        GroupDescription   = "External Members For Project: $projectTitle"
+        SiteName           = "External $safeTitle"
         SiteAlias          = "External $safe"
-        SiteTitle          = "External $ProjectName"
-        AccessPackageName  = $ProjectName
-        WorkflowName       = "Welcome - $ProjectName external members"
+        SiteTitle          = "External $projectTitle"
+        AccessPackageName  = "AccessPackage-Sharepoint-Ext-$safeTitle-Members"
+        WorkflowName       = "Welcome - $projectTitle External Members"
 
         # SharePoint (derived from tenant name)
         SPTenantUrl        = "https://$tenantName.sharepoint.com"
